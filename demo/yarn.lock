@@ -1836,7 +1836,7 @@ sails-generate@^1.15.19:
     reportback "^2.0.1"
     sails.io.js-dist "^1.0.0"
 
-"sails-hook-api-version@file:..":
+"sails-hook-api-version-accept@file:..":
   version "0.1.0"
 
 sails-hook-orm@^2.0.0-16:

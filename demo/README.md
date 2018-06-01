@@ -1,13 +1,13 @@
-> An app to demonstrate using the `sails-hook-api-version` Sails.js hook
+> An app to demonstrate using the `sails-hook-api-version-accept` Sails.js hook
 
 ## How to run this demo
  1. clone this repo
     ```bash
-    git clone https://github.com/tomsaleeba/sails-hook-api-version.git
+    git clone https://github.com/tomsaleeba/sails-hook-api-version-accept.git
     ```
  1. `cd` to the demo dir
     ```bash
-    cd sails-hook-api-version/demo/
+    cd sails-hook-api-version-accept/demo/
     ```
  1. install dependencies
     ```bash

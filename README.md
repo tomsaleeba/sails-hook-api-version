@@ -31,7 +31,7 @@
     ```bash
     sails generate helper v1FooFind
     ```
-  1. implement the helper(s) you've just created. You can do this however you see fit. As an example, to implement an older `find` action, it makes sense to call the `.find()` action (effectively getting the results for the latest version), then transform the result before sending the response. See [`demo/api/helpers/v1FooFind.js`](https://github.com/tomsaleeba/sails-hook-api-version/tree/master/demo/api/helpers/v1FooFind.js) for an example.
+  1. implement the helper(s) you've just created. You can do this however you see fit. As an example, to implement an older `find` action, it makes sense to call the `.find()` action (effectively getting the results for the latest version), then transform the result before sending the response. See [`demo/api/helpers/v1FooFind.js`](https://github.com/tomsaleeba/sails-hook-api-version-accept/tree/master/demo/api/helpers/v1FooFind.js) for an example.
 
 ## Reference for `versionConfig` object
 

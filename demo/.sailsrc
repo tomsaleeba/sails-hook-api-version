@@ -8,6 +8,6 @@
   },
   "hooks": {
     "grunt": false,
-    "api-version": true
+    "api-version-accept": true
   }
 }

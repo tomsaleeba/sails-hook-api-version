@@ -1,5 +1,5 @@
 {
-  "name": "sails-hook-api-version",
+  "name": "sails-hook-api-version-accept",
   "version": "0.1.0",
   "description": "Sails.js hook that enabled API versioning through the Accept header",
   "keywords": [
@@ -23,7 +23,7 @@
   "main": "index.js",
   "repository": {
     "type": "git",
-    "url": "git://github.com/tomsaleeba/sails-hook-api-version.git"
+    "url": "git://github.com/tomsaleeba/sails-hook-api-version-accept.git"
   },
   "author": "Tom Saleeba",
   "license": "MIT",
