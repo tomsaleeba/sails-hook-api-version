@@ -13,7 +13,7 @@
       "generators": {...
       "_generatedWith": {...
       "hooks": {
-        "api-version": true /* <- add this line */
+        "api-version-accept": true /* <- add this line */
       }
     }
     ```

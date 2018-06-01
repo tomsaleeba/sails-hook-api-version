@@ -15,7 +15,7 @@ describe('Basic tests ::', () => {
     Sails().lift({
       hooks: {
         // Load the hook
-        'api-version': require('../'),
+        'api-version-accept': require('../'),
         // Skip grunt (unless your hook uses it)
         'grunt': false
       },
