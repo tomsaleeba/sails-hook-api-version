@@ -15,8 +15,8 @@ module.exports = function (sails) {
       return cb()
     },
     bindBlueprintHooks: function () {
-      var defaultArchiveInUse = _.any(sails.models, function(model) { return model.archiveModelIdentity === 'archive' })
-      _.each(sails.models, function(Model, identity) {
+      var defaultArchiveInUse = _.any(sails.models, model => { return model.archiveModelIdentity === 'archive' })
+      _.each(sails.models, (Model, identity) => {
         if (identity === 'archive' && defaultArchiveInUse) {
           return
         }
@@ -25,7 +25,7 @@ module.exports = function (sails) {
           sails.log.debug(`Model '${identity}' doesn't define the '${VERSION_CONFIG_KEY}' key, *not* enabling API versioning for this model.`)
           return
         }
-        _.each(versionConfig[VERSION_ARRAY_KEY], function (tag) {
+        _.each(versionConfig[VERSION_ARRAY_KEY], tag => {
           const shortcutRoute = `get /${identity}`
           // TODO handle other shadow routes
           // TODO handle URL prefix
@@ -63,7 +63,7 @@ function buildGetWrapper (model, modelIdentity, versionTag, actionName) {
       res.forceMime = latestVersionMime
       return proceed()
     }
-    const helperName = `${versionTag}${_.capitalize(modelIdentity)}${actionName}`
+    const helperName = `${versionTag}${_.capitalize(modelIdentity.toLowerCase())}${actionName.toLowerCase()}`
     const handler = sails.helpers[helperName]
     const respBody = await handler()
     res.set('Content-type', selectedMime)
@@ -78,7 +78,7 @@ function buildGetWrapper (model, modelIdentity, versionTag, actionName) {
     }, [])
     return result
   }
-  
+
   function determineSelectedMime (validVersionMimeTypes, req) {
     for (const currMime of validVersionMimeTypes) {
       if (req.accepts(currMime)) {
@@ -87,7 +87,7 @@ function buildGetWrapper (model, modelIdentity, versionTag, actionName) {
     }
     return false
   }
-  
+
   function getLatestVersionMime () {
     const versionConfig = getVersionConfig()
     const versions = versionConfig[VERSION_ARRAY_KEY]
@@ -135,13 +135,12 @@ function failIfTrue (failureIfTrueCondition, msg) {
  * @param {*} optionalData response body to send
  */
 function customOkResponse(optionalData) {
-  const req = this.req
   const res = this.res
   const ok = 200
 
   if (res.forceMime) {
     sails.log.silly(`Forcing custom MIME: ${res.forceMime}`)
-    res.set('Content-type', res.forceMime)
+    res.set('Content-type', res.forceMime) // TODO should we add charset?
   }
 
   if (optionalData === undefined) {
