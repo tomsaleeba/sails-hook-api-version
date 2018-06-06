@@ -1,4 +1,4 @@
-> An app demonstrating a Sails.js hook that enables API versioning via the Accept header
+> A Sails.js hook that enables API versioning via the HTTP Accept header. It forces clients to specify the version and routes requests for older versions to Sails.js helpers.
 
 ## How to use this hook
 
@@ -6,7 +6,7 @@
     ```bash
       yarn add sails-hook-api-version-accept
     ```
- 1. enable the hook in your `.sailsrc`
+ 1. enable the hook in your `.sailsrc` by listing it as a hook:
     ```js
     /* .sailsrc */
     {
@@ -20,18 +20,21 @@
  1. on each of your models that you want versioned, you need to add the `versionConfig` field
     ```js
     module.exports = {
+
       attributes: {...
-      versionConfig: { /* <- add this config */
+
+      versionConfig: { /* <- add this config, see next section for help */
         versions: ['v1', 'v2'],
         vendorPrefix: 'vnd.techotom',
       }
     }
     ```
   1. for versions that aren't the latest, you need to define some helpers to service those requests. Each helper will match the pattern: `api/helpers/<version>-<model>-<action>.js`. For example, for `version=v1`, `model=Foo` and `action=Find` we would create a helper with the file name: `api/helpers/v1-Foo-Find.js`. You can create the file by hand or use the sails generator:
-    ```bash
-    sails generate helper v1FooFind
-    ```
-  1. implement the helper(s) you've just created. You can do this however you see fit. As an example, to implement an older `find` action, it makes sense to call the `.find()` action (effectively getting the results for the latest version), then transform the result before sending the response. See [`demo/api/helpers/v1FooFind.js`](https://github.com/tomsaleeba/sails-hook-api-version-accept/tree/master/demo/api/helpers/v1FooFind.js) for an example.
+      ```bash
+      sails generate helper v1FooFind
+      ```
+  1. implement the helper(s) you've just created. You can do this however you see fit. As an example, to implement a `find` action for an older version, it makes sense to call the `.find()` action (effectively getting the results for the latest version), then transform the result before sending the response. See [`demo/api/helpers/v1FooFind.js`](https://github.com/tomsaleeba/sails-hook-api-version-accept/tree/master/demo/api/helpers/v1FooFind.js) for an example.
+  1. update any clients for this API so they send the correct `Accept` header.
 
 ## Reference for `versionConfig` object
 
@@ -68,6 +71,7 @@ This hook tries to leave as much as possible to pure Sails and only step in when
 ## Assumptions
  1. you're using the hook from the start for a new project. You can use it for existing projects, it might require more work to add though.
  1. you have Blueprint shadow routes enabled
+ 1. your Sails.js project is basically a HTTP API, i.e. you selected `Empty` when you generated a new Sails project. No testing against a "full" Sails web app (with MVC) has been done yet.
 
 ## TODO
  1. work out how to handle deleted fields in a given Model. This requires that the model can still store the old field but requests for newer versions don't include it. Perhaps we can add an optional config param that defines which version is the `default`, so you can pin that to a version and write helpers for newer versions.

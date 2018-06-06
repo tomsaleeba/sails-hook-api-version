@@ -16,21 +16,37 @@ module.exports = function (sails) {
     },
     bindBlueprintHooks: function () {
       var defaultArchiveInUse = _.any(sails.models, model => { return model.archiveModelIdentity === 'archive' })
-      _.each(sails.models, (Model, identity) => {
-        if (identity === 'archive' && defaultArchiveInUse) {
+      _.each(sails.models, (model, modelIdentity) => {
+        if (modelIdentity === 'archive' && defaultArchiveInUse) {
           return
         }
-        const versionConfig = Model[VERSION_CONFIG_KEY]
+        const versionConfig = model[VERSION_CONFIG_KEY]
         if (typeof(versionConfig) === 'undefined') {
-          sails.log.debug(`Model '${identity}' doesn't define the '${VERSION_CONFIG_KEY}' key, *not* enabling API versioning for this model.`)
+          sails.log.debug(`Model '${modelIdentity}' doesn't define the '${VERSION_CONFIG_KEY}' key, *not* enabling API versioning for this model.`)
           return
         }
-        _.each(versionConfig[VERSION_ARRAY_KEY], tag => {
-          const shortcutRoute = `get /${identity}`
-          // TODO handle other shadow routes
+        _.each(versionConfig[VERSION_ARRAY_KEY], versionTag => {
+          const mime = buildMime(versionConfig[VENDOR_PREFIX_KEY], versionTag)
+          if (isLatestVersionMime(mime, model, modelIdentity)) {
+            // Don't need to bind helpers to the latest version, blueprints handle that for us :D
+            return
+          }
+          function bind (shortcutRoute, actionName) {
+            const helperName = `${versionTag}${_.capitalize(modelIdentity.toLowerCase())}${actionName.toLowerCase()}`
+            if (!sails.helpers[helperName]) {
+              sails.log.warn(`'${helperName}' helper is *not* defined. Calls to '${shortcutRoute}' with 'Accept: ${mime}' WILL FAIL! Create the helper to fix this.`)
+              return
+            }
+            sails.router.bind(shortcutRoute, buildGetWrapper(model, modelIdentity, helperName))
+            sails.log.debug(`Applying API versioning to '${shortcutRoute}' route, handled by '${helperName}'`)
+          }
           // TODO handle URL prefix
-          sails.router.bind(shortcutRoute, buildGetWrapper(Model, identity, tag, 'Find'))
-          sails.log.debug(`Applying API versioning to '${shortcutRoute}' route`)
+          bind(`get /${modelIdentity}`, 'Find')
+          bind(`get /${modelIdentity}/:id`, 'FindOne')
+          bind(`post /${modelIdentity}`, 'Create')
+          bind(`patch /${modelIdentity}/:id`, 'Update')
+          bind(`delete /${modelIdentity}/:id`, 'Destroy')
+          // TODO: bind "to-many" relationship blueprint actions (Add, Remove, Replace)
         })
       })
       // TODO verify we aren't overwriting a custom .ok() response handler
@@ -39,12 +55,12 @@ module.exports = function (sails) {
   }
 }
 
-function buildGetWrapper (model, modelIdentity, versionTag, actionName) {
+function buildGetWrapper (model, modelIdentity, helperName) {
   return async function (req, res, proceed) {
     let acceptHeader = req.headers.accept
     sails.log.silly(`${req.method} ${req.path} request has Accept header='${acceptHeader}'`)
     const isAcceptAnything = req.accepts('*/*')
-    const latestVersionMime = getLatestVersionMime()
+    const latestVersionMime = getLatestVersionMime(model, modelIdentity)
     if (isAcceptAnything) {
       res.forceMime = latestVersionMime
       return proceed()
@@ -58,12 +74,10 @@ function buildGetWrapper (model, modelIdentity, versionTag, actionName) {
         supportedTypes: validVersionMimeTypes,
       })
     }
-    const isLatestVersionMime = latestVersionMime === selectedMime
-    if (isLatestVersionMime) {
+    if (isLatestVersionMime(selectedMime, model, modelIdentity)) {
       res.forceMime = latestVersionMime
       return proceed()
     }
-    const helperName = `${versionTag}${_.capitalize(modelIdentity.toLowerCase())}${actionName.toLowerCase()}`
     const handler = sails.helpers[helperName]
     const respBody = await handler()
     res.set('Content-type', selectedMime)
@@ -71,57 +85,62 @@ function buildGetWrapper (model, modelIdentity, versionTag, actionName) {
   }
 
   function getValidVersionedMimeTypes () {
-    const versionConfig = getVersionConfig()
+    const versionConfig = getVersionConfig(model, modelIdentity)
     const result = versionConfig[VERSION_ARRAY_KEY].reduce((accum, curr) => {
       accum.push(buildMime(versionConfig[VENDOR_PREFIX_KEY], curr))
       return accum
     }, [])
     return result
   }
+}
 
-  function determineSelectedMime (validVersionMimeTypes, req) {
-    for (const currMime of validVersionMimeTypes) {
-      if (req.accepts(currMime)) {
-        return currMime
-      }
+function determineSelectedMime (validVersionMimeTypes, req) {
+  for (const currMime of validVersionMimeTypes) {
+    if (req.accepts(currMime)) {
+      return currMime
     }
-    return false
   }
+  return false
+}
 
-  function getLatestVersionMime () {
-    const versionConfig = getVersionConfig()
-    const versions = versionConfig[VERSION_ARRAY_KEY]
-    const latestVersion = _.last(versions)
-    return buildMime(versionConfig[VENDOR_PREFIX_KEY], latestVersion)
-  }
+function isLatestVersionMime (mime, model, modelIdentity) {
+  const latestVersionMime = getLatestVersionMime(model, modelIdentity)
+  return latestVersionMime === mime
+}
 
-  function buildMime (vendorPrefix, versionFragment) {
-    return `application/${vendorPrefix}.${versionFragment}+json`
-  }
+function getLatestVersionMime (model, modelIdentity) {
+  const versionConfig = getVersionConfig(model, modelIdentity)
+  const versions = versionConfig[VERSION_ARRAY_KEY]
+  const latestVersion = _.last(versions)
+  return buildMime(versionConfig[VENDOR_PREFIX_KEY], latestVersion)
+}
 
-  function getVersionConfig () {
-    const versionConfig = model[VERSION_CONFIG_KEY]
-    failIfTrue(!versionConfig,
-      `model '${modelIdentity}' needs the '${VERSION_CONFIG_KEY}' field defined.`)
-    failIfTrue(!_.isPlainObject(versionConfig),
-      `${modelIdentity}.${VERSION_CONFIG_KEY} must be a plain object/dict`)
+function getVersionConfig (model, modelIdentity) {
+  const versionConfig = model[VERSION_CONFIG_KEY]
+  failIfTrue(!versionConfig,
+    `model '${modelIdentity}' needs the '${VERSION_CONFIG_KEY}' field defined.`)
+  failIfTrue(!_.isPlainObject(versionConfig),
+    `${modelIdentity}.${VERSION_CONFIG_KEY} must be a plain object/dict`)
 
-    const versionList = versionConfig[VERSION_ARRAY_KEY]
-    failIfTrue(!versionList,
-      `${modelIdentity}.${VERSION_CONFIG_KEY} needs the '${VERSION_ARRAY_KEY}' field defined as string[].`)
-    failIfTrue(!_.every(versionList, String),
-      `${modelIdentity}.${VERSION_CONFIG_KEY} should have all elements of type 'string'`)
-    failIfTrue(versionList.length < 1,
-      `${modelIdentity}.${VERSION_CONFIG_KEY} should have at least one element`)
-    // TODO validate that versions are in order, perhaps add a flag to force acceptance of any order
+  const versionList = versionConfig[VERSION_ARRAY_KEY]
+  failIfTrue(!versionList,
+    `${modelIdentity}.${VERSION_CONFIG_KEY} needs the '${VERSION_ARRAY_KEY}' field defined as string[].`)
+  failIfTrue(!_.every(versionList, String),
+    `${modelIdentity}.${VERSION_CONFIG_KEY} should have all elements of type 'string'`)
+  failIfTrue(versionList.length < 1,
+    `${modelIdentity}.${VERSION_CONFIG_KEY} should have at least one element`)
+  // TODO validate that versions are in order, perhaps add a flag to force acceptance of any order
 
-    const vendorPrefix = versionConfig[VENDOR_PREFIX_KEY]
-    failIfTrue(!vendorPrefix,
-      `${modelIdentity}.${VENDOR_PREFIX_KEY} needs the '${VENDOR_PREFIX_KEY}' field defined as string.`)
-    failIfTrue(!_.isString(vendorPrefix),
-      `${modelIdentity}.${VENDOR_PREFIX_KEY} should be of type 'string'`)
-    return versionConfig
-  }
+  const vendorPrefix = versionConfig[VENDOR_PREFIX_KEY]
+  failIfTrue(!vendorPrefix,
+    `${modelIdentity}.${VENDOR_PREFIX_KEY} needs the '${VENDOR_PREFIX_KEY}' field defined as string.`)
+  failIfTrue(!_.isString(vendorPrefix),
+    `${modelIdentity}.${VENDOR_PREFIX_KEY} should be of type 'string'`)
+  return versionConfig
+}
+
+function buildMime (vendorPrefix, versionFragment) {
+  return `application/${vendorPrefix}.${versionFragment}+json`
 }
 
 function failIfTrue (failureIfTrueCondition, msg) {

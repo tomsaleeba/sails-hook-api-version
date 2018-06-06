@@ -12,10 +12,13 @@
   "devDependencies": {
     "@sailshq/eslint": "^4.19.3",
     "mocha": "^5.2.0",
-    "sails": "^1.0.2"
+    "nodemon": "^1.17.5",
+    "sails": "^1.0.2",
+    "should": "^13.2.1"
   },
   "scripts": {
     "test": "npm run lint && npm run custom-tests && echo 'Done.'",
+    "test:watch": "nodemon -w index.js -w test/ -x 'npm test'",
     "lint": "eslint . --max-warnings=0 --report-unused-disable-directives && echo '✔  Your .js files look good.'",
     "lint:fix": "eslint . --fix",
     "custom-tests": "mocha -R spec"

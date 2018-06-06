@@ -1,45 +1,63 @@
-const Sails = require('sails').Sails
+const Sails = require('sails').constructor
+require('should')
 
 describe('Basic tests ::', () => {
 
   // Var to hold a running sails app instance
   var sails
 
-  // Before running any tests, attempt to lift Sails
   before(function (done) {
-
-    // Hook will timeout in 10 seconds
     this.timeout(11000)
-
-    // Attempt to lift sails
-    Sails().lift({
+    sails = new Sails()
+    sails.load({
       hooks: {
-        // Load the hook
         'api-version-accept': require('../'),
-        // Skip grunt (unless your hook uses it)
-        'grunt': false
+        grunt: false,
+        views: false,
+        cors: false,
+        csrf: false,
+        i18n: false,
+        pubsub: false,
+        session: false,
       },
-      log: {level: 'error'}
-    },(err, _sails) => {
+      log: {level: 'error'},
+      // TODO get models defined
+      // something like https://github.com/balderdashy/sails/blob/7c34d3f65b748c416adbffc8e1c2de3bae7eec4a/test/integration/hook.blueprints.index.routes.test.js#L41
+      // which the bottom of https://sailsjs.com/documentation/concepts/programmatic-usage says should work
+      orm: {
+        moduleDefinitions: {
+          models: { 'user': {} }
+        }
+      },
+    },(err) => {
       if (err) {return done(err)}
-      sails = _sails
       return done()
     })
   })
 
   // After tests are complete, lower Sails
   after((done) => {
-
-    // Lower Sails (if it successfully lifted)
     if (sails) {
       return sails.lower(done)
     }
-    // Otherwise just return
     return done()
   })
 
-  // Test that Sails can lift with the hook in place
-  it ('sails does not crash', () => {
+  it('should not crash when we lift', () => {
     return true
+  })
+
+  it('should succeed for a Find action', done => {
+    sails.request({
+      url: '/user',
+      method: 'GET',
+      headers: {
+        'content-type': '*/*' // TODO change
+      }
+    }, (err, res, body) => {
+      if (err) {return done(err)}
+      body.should.be.a.Array.with.lengthOf(1)
+      done()
+    })
   })
 })
