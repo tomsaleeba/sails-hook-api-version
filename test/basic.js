@@ -180,25 +180,16 @@ describe('Basic tests ::', () => {
   })
 
   it('should be able to perform FindOne', done => {
-    sails.request({
-      url: '/user',
-      method: 'GET',
-      headers: {
-        'Accept': 'application/vnd.techotom.test.user.v2+json'
-      }
-    }, (err, _, bodyStr) => {
-      if (err) { return done(err) }
-      const allUsers = JSON.parse(bodyStr)
-      const userId = allUsers[0].id
+    getOneUserId(done, sails, userId => {
       sails.request({
         url: `/user/${userId}`,
         method: 'GET',
         headers: {
           'Accept': 'application/vnd.techotom.test.user.v2+json'
         }
-      }, (err2, _, bodyStr2) => {
-        if (err2) { return done(err2) }
-        const userRecord = JSON.parse(bodyStr2)
+      }, (err, _, bodyStr) => {
+        if (err) { return done(err) }
+        const userRecord = JSON.parse(bodyStr)
         userRecord.should.have.properties(['id', 'name', 'phone'])
         userRecord.should.not.have.property('address')
         done()
@@ -206,6 +197,21 @@ describe('Basic tests ::', () => {
     })
   })
 })
+
+function getOneUserId (done, sails, cb) {
+  sails.request({
+    url: '/user?limit=1',
+    method: 'GET',
+    headers: {
+      'Accept': '*/*'
+    }
+  }, (err, _, bodyStr) => {
+    if (err) { return done(err) }
+    const allUsers = JSON.parse(bodyStr)
+    const userId = allUsers[0].id
+    cb(userId)
+  })
+}
 
 function createUserInstances (sails) {
   sails.request('GET /user/create?name=Carl&address=123%20Fake%20St&phone=1111', (err) => {
