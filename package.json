@@ -9,16 +9,20 @@
     "mime",
     "accept"
   ],
+  "dependencies": {
+    "sails": "1.0.3-2",
+    "sails-hook-orm": "^2.0.1"
+  },
   "devDependencies": {
     "@sailshq/eslint": "^4.19.3",
     "mocha": "^5.2.0",
     "nodemon": "^1.17.5",
-    "sails": "^1.0.2",
-    "should": "^13.2.1"
+    "should": "^13.2.1",
+    "should-http": "^0.1.1"
   },
   "scripts": {
     "test": "npm run lint && npm run custom-tests && echo 'Done.'",
-    "test:watch": "nodemon -w index.js -w test/ -x 'npm test'",
+    "test:watch": "mocha -R spec -w",
     "lint": "eslint . --max-warnings=0 --report-unused-disable-directives && echo '✔  Your .js files look good.'",
     "lint:fix": "eslint . --fix",
     "custom-tests": "mocha -R spec"

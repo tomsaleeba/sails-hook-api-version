@@ -15,5 +15,4 @@ lib-cov
 *.out
 *.pid
 
-.vscode
 .tmp

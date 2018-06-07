@@ -129,5 +129,3 @@ lib-cov
 *.log
 *.out
 *.pid
-
-.vscode

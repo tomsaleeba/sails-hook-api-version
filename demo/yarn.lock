@@ -1204,7 +1204,7 @@ lru-cache@^4.0.1:
     pseudomap "^1.0.2"
     yallist "^2.1.2"
 
-machine-as-action@^10.0.0-0:
+machine-as-action@^10.0.0-0, machine-as-action@^10.2.0:
   version "10.2.0"
   resolved "https://registry.yarnpkg.com/machine-as-action/-/machine-as-action-10.2.0.tgz#e23606ff3800de4bedefd468c816c006f8da588a"
   dependencies:
@@ -1838,8 +1838,11 @@ sails-generate@^1.15.19:
 
 "sails-hook-api-version-accept@file:..":
   version "0.1.0"
+  dependencies:
+    sails "1.0.3-2"
+    sails-hook-orm "^2.0.1"
 
-sails-hook-orm@^2.0.0-16:
+sails-hook-orm@^2.0.1:
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/sails-hook-orm/-/sails-hook-orm-2.0.1.tgz#ce270f336fb7005d3df5b3afb9d7af52442680b4"
   dependencies:
@@ -1877,6 +1880,55 @@ sails-stringfile@0.3.2:
 sails.io.js-dist@^1.0.0:
   version "1.2.1"
   resolved "https://registry.yarnpkg.com/sails.io.js-dist/-/sails.io.js-dist-1.2.1.tgz#37b6cee741c45c9b7fa812108fb061e5334c248f"
+
+sails@1.0.3-2:
+  version "1.0.3-2"
+  resolved "https://registry.yarnpkg.com/sails/-/sails-1.0.3-2.tgz#8add64e226c6106f14668d3a8a2d40cec38f3d96"
+  dependencies:
+    "@sailshq/lodash" "^3.10.2"
+    async "2.5.0"
+    captains-log "^2.0.0"
+    chalk "2.3.0"
+    commander "2.11.0"
+    common-js-file-extensions "1.0.2"
+    compression "1.7.1"
+    connect "3.6.5"
+    cookie "0.3.1"
+    cookie-parser "1.4.3"
+    cookie-signature "1.0.6"
+    csurf "1.9.0"
+    ejs "2.5.7"
+    express "4.16.2"
+    express-session "1.15.6"
+    flaverr "^1.9.0"
+    glob "7.1.2"
+    i18n-2 "0.6.3"
+    include-all "^4.0.0"
+    machine "^15.2.2"
+    machine-as-action "^10.2.0"
+    machinepack-process "^2.0.2"
+    machinepack-redis "^1.1.1"
+    merge-defaults "0.2.1"
+    merge-dictionaries "^1.0.0"
+    minimist "0.0.10"
+    parley "^3.3.4"
+    parseurl "1.3.2"
+    path-to-regexp "1.5.3"
+    pluralize "1.2.1"
+    prompt "0.2.14"
+    rc "1.2.2"
+    router "1.3.2"
+    rttc "^10.0.0-0"
+    sails-generate "^1.15.19"
+    sails-stringfile "0.3.2"
+    semver "4.3.6"
+    serve-favicon "2.4.5"
+    serve-static "1.13.1"
+    skipper "~0.8.0"
+    sort-route-addresses "^0.0.1"
+    uid-safe "2.1.5"
+    vary "1.1.2"
+    whelk "^6.0.1"
 
 sails@^1.0.2:
   version "1.0.2"
@@ -2337,7 +2389,7 @@ waterline@^0.13.1-0:
     waterline-schema "^1.0.0-20"
     waterline-utils "^1.3.7"
 
-whelk@^6.0.0:
+whelk@^6.0.0, whelk@^6.0.1:
   version "6.0.1"
   resolved "https://registry.yarnpkg.com/whelk/-/whelk-6.0.1.tgz#96955aa2d26672a78346c894568148b557dce998"
   dependencies:

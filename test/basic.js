@@ -1,15 +1,13 @@
 const Sails = require('sails').constructor
 require('should')
+require('should-http')
 
 describe('Basic tests ::', () => {
 
-  // Var to hold a running sails app instance
   var sails
 
-  before(function (done) {
-    this.timeout(11000)
-    sails = new Sails()
-    sails.load({
+  before(done => {
+    (new Sails()).load({
       hooks: {
         'api-version-accept': require('../'),
         grunt: false,
@@ -21,22 +19,37 @@ describe('Basic tests ::', () => {
         session: false,
       },
       log: {level: 'error'},
-      // TODO get models defined
-      // something like https://github.com/balderdashy/sails/blob/7c34d3f65b748c416adbffc8e1c2de3bae7eec4a/test/integration/hook.blueprints.index.routes.test.js#L41
-      // which the bottom of https://sailsjs.com/documentation/concepts/programmatic-usage says should work
       orm: {
         moduleDefinitions: {
-          models: { 'user': {} }
+          models: {
+            'user': {
+              attributes: {
+                'name': 'string'
+              },
+              versionConfig: {
+                versions: ['v1', 'v2', 'v3'],
+                vendorPrefix: 'vnd.techotom.test.user'
+              }
+            }
+          }
         }
       },
-    },(err) => {
+      models: {
+        migrate: 'drop',
+        attributes: {
+          id: { type: 'number', autoIncrement: true}
+        }
+      },
+    },(err, _sails) => {
       if (err) {return done(err)}
+      sails = _sails
+      createUserInstances(sails)
       return done()
     })
   })
 
   // After tests are complete, lower Sails
-  after((done) => {
+  after(done => {
     if (sails) {
       return sails.lower(done)
     }
@@ -47,17 +60,28 @@ describe('Basic tests ::', () => {
     return true
   })
 
-  it('should succeed for a Find action', done => {
+  it('should succeed for a Find action that Accepts anything', done => {
     sails.request({
       url: '/user',
       method: 'GET',
       headers: {
-        'content-type': '*/*' // TODO change
+        'Accept': '*/*'
       }
-    }, (err, res, body) => {
+    }, (err, res, bodyStr) => {
       if (err) {return done(err)}
-      body.should.be.a.Array.with.lengthOf(1)
+      const body = JSON.parse(bodyStr)
+      body.should.be.Array().with.lengthOf(2)
+      res.should.have.contentType('application/vnd.techotom.test.user.v3+json')
       done()
     })
   })
 })
+
+function createUserInstances (sails) {
+  sails.request('GET /user/create?name=Carl', (err) => {
+    if (err) {throw err}
+  })
+  sails.request('GET /user/create?name=Lenny', (err) => {
+    if (err) {throw err}
+  })
+}

@@ -9,7 +9,7 @@
     "async": "2.0.1",
     "sails": "^1.0.2",
     "sails-hook-api-version-accept": "file:..",
-    "sails-hook-orm": "^2.0.0-16",
+    "sails-hook-orm": "^2.0.1",
     "sails-hook-sockets": "^1.4.0"
   },
   "devDependencies": {
