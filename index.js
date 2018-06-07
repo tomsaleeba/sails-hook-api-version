@@ -1,5 +1,5 @@
 const _ = require('@sailshq/lodash')
-const accepts = require('accepts') // because req.accents doesn't work in unit tests
+const accepts = require('accepts')
 
 const VERSION_CONFIG_KEY = 'versionConfig'
 const VERSION_ARRAY_KEY = 'versions'
@@ -43,7 +43,7 @@ module.exports = function (sails) {
             }
             const helperName = buildHelperName(versionTag, modelIdentity, actionName)
             if (!sails.helpers[helperName]) {
-              sails.log.error(`'${helperName}' helper is *not* defined. Calls to '${actionName} ${modelIdentity}' with 'Accept: ${mime}' WILL FAIL! Create the helper to fix this.`)
+              sails.log.warn(`'${helperName}' helper is *not* defined. Calls to '${actionName} ${modelIdentity}' with 'Accept: ${mime}' WILL FAIL! Create the helper to fix this.`)
             }
           })
         })
@@ -62,6 +62,9 @@ module.exports = function (sails) {
       })
       // TODO verify we aren't overwriting a custom .ok() response handler
       sails.middleware.responses.ok = customOkResponse
+    },
+    _testonly: {
+      getRequestedVersion
     }
   }
 
@@ -69,8 +72,7 @@ module.exports = function (sails) {
     return async function (req, res, proceed) {
       let acceptHeader = req.headers.accept
       sails.log.silly(`${req.method} ${req.path} request has Accept header='${acceptHeader}'`)
-      const acceptor = accepts(req)
-      const isAcceptAnything = acceptor.type(['*/*'])
+      const isAcceptAnything = isMimeAccepted(req, '*/*')
       const latestVersionMime = getLatestVersionMime(model, modelIdentity)
       if (isAcceptAnything) {
         res.forceMime = latestVersionMime
@@ -113,7 +115,7 @@ module.exports = function (sails) {
 
   function determineSelectedMime (validVersionMimeTypes, req) {
     for (const currMime of validVersionMimeTypes) {
-      if (req.accepts(currMime)) {
+      if (isMimeAccepted(req, currMime)) {
         return currMime
       }
     }
@@ -156,29 +158,6 @@ module.exports = function (sails) {
     return versionConfig
   }
 
-  function getRequestedVersion (mime, versionConfig) {
-    const result = mime
-      .replace('application/', '')
-      .replace('+json', '')
-      .replace(versionConfig[VENDOR_PREFIX_KEY], '')
-    // TODO verify is a valid version
-    return result
-  }
-
-  function buildMime (vendorPrefix, versionFragment) {
-    return `application/${vendorPrefix}.${versionFragment}+json`
-  }
-
-  function buildHelperName (versionTag, modelIdentity, actionName) {
-    return `${versionTag}${_.capitalize(modelIdentity.toLowerCase())}${actionName.toLowerCase()}`
-  }
-
-  function failIfTrue (failureIfTrueCondition, msg) {
-    if (failureIfTrueCondition) {
-      throw new Error(`Config problem: ${msg}`)
-    }
-  }
-
   /**
    * Custom OK (200) response handler to force our MIME type, if required.
    * @param {*} optionalData response body to send
@@ -198,5 +177,39 @@ module.exports = function (sails) {
     // work around for unit testing, so we don't get overwritten by https://github.com/balderdashy/sails/blob/635ec44316f797237019dfc5b1e14b8085eb960f/lib/router/res.js#L264
     const respBody = JSON.stringify(optionalData)
     return res.status(ok).send(respBody)
+  }
+
+  function isMimeAccepted (req, mime) {
+    // because req.accents doesn't work in unit tests
+    const acceptor = accepts(req)
+    return acceptor.type([mime])
+  }
+}
+
+const MIME_PREFIX = 'application/'
+const MIME_SEPARATOR = '.'
+const MIME_SUFFIX = '+json'
+
+function getRequestedVersion (mime, versionConfig) {
+  const result = mime
+    .replace(MIME_PREFIX, '')
+    .replace(MIME_SUFFIX, '')
+    .replace(versionConfig[VENDOR_PREFIX_KEY], '')
+    .replace(MIME_SEPARATOR, '')
+  // TODO verify is a valid version
+  return result
+}
+
+function buildMime (vendorPrefix, versionFragment) {
+  return `${MIME_PREFIX}${vendorPrefix}${MIME_SEPARATOR}${versionFragment}${MIME_SUFFIX}`
+}
+
+function buildHelperName (versionTag, modelIdentity, actionName) {
+  return `${versionTag}${_.capitalize(modelIdentity.toLowerCase())}${actionName.toLowerCase()}`
+}
+
+function failIfTrue (failureIfTrueCondition, msg) {
+  if (failureIfTrueCondition) {
+    throw new Error(`Config problem: ${msg}`)
   }
 }
