@@ -43,7 +43,7 @@ module.exports = function (sails) {
             }
             const helperName = buildHelperName(versionTag, modelIdentity, actionName)
             if (!sails.helpers[helperName]) {
-              sails.log.warn(`'${helperName}' helper is *not* defined. Calls to '${actionName} ${modelIdentity}' with 'Accept: ${mime}' WILL FAIL! Create the helper to fix this.`)
+              sails.log.warn(`'${helperName.toLowerCase()}' helper is *not* defined. Calls to '${actionName} ${modelIdentity}' with 'Accept: ${mime}' WILL FAIL! Create the helper to fix this.`)
             }
           })
         })
@@ -95,7 +95,7 @@ module.exports = function (sails) {
       const helperName = helperTemplate.replace(PLACEHOLDER_VERSION, requestedVersion)
       const handler = sails.helpers[helperName]
       if (!handler) {
-        const msg = `No helper defined '${helperName}'. You need to create and implement that helper!`
+        const msg = `No helper defined '${helperName.toLowerCase()}'. You need to create and implement that helper!`
         throw new Error(msg)
       }
       let respBody

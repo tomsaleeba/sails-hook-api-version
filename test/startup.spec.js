@@ -65,7 +65,7 @@ describe('Startup tests ::', () => {
     }, (err) => {
       err.should.be.Error()
       err.status.should.eql(500)
-      err.body.should.startWith(`Error: No helper defined 'v2Foofind'`)
+      err.body.should.startWith(`Error: No helper defined 'v2foofind'`)
       done()
     })
   })
