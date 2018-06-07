@@ -1,5 +1,5 @@
 const Sails = require('sails').constructor
-const should = require('should')
+require('should')
 require('should-http')
 
 describe('Startup tests ::', () => {

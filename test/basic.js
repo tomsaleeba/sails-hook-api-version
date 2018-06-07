@@ -68,6 +68,21 @@ describe('Basic tests ::', () => {
               return exits.success(mappedToV1)
             }
           },
+          'v2userfindone': {
+            inputs: {
+              id: {
+                type: 'string',
+                required: true
+              }
+            },
+            fn: async function (inputs, exits) {
+              const result = await user.findOne({
+                id: inputs.id
+              })
+              delete result.address
+              return exits.success(result)
+            }
+          },
         }
       },
       models: {
@@ -142,6 +157,52 @@ describe('Basic tests ::', () => {
       const isAnyPhones = _.some(body, 'phone')
       isAnyPhones.should.not.be.true('v1 responses should have the phone field removed')
       done()
+    })
+  })
+
+  it('should get a 406 when requesting application/json', done => {
+    sails.request({
+      url: '/user',
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json'
+      }
+    }, (err) => {
+      err.should.be.Error()
+      err.status.should.eql(406)
+      err.body.supportedTypes.should
+        .containEql('application/vnd.techotom.test.user.v1+json')
+        .and.containEql('application/vnd.techotom.test.user.v2+json')
+        .and.containEql('application/vnd.techotom.test.user.v3+json')
+        .and.has.length(3)
+      done()
+    })
+  })
+
+  it('should be able to perform FindOne', done => {
+    sails.request({
+      url: '/user',
+      method: 'GET',
+      headers: {
+        'Accept': 'application/vnd.techotom.test.user.v2+json'
+      }
+    }, (err, _, bodyStr) => {
+      if (err) { return done(err) }
+      const allUsers = JSON.parse(bodyStr)
+      const userId = allUsers[0].id
+      sails.request({
+        url: `/user/${userId}`,
+        method: 'GET',
+        headers: {
+          'Accept': 'application/vnd.techotom.test.user.v2+json'
+        }
+      }, (err2, _, bodyStr2) => {
+        if (err2) { return done(err2) }
+        const userRecord = JSON.parse(bodyStr2)
+        userRecord.should.have.properties(['id', 'name', 'phone'])
+        userRecord.should.not.have.property('address')
+        done()
+      })
     })
   })
 })

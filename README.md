@@ -1,5 +1,7 @@
 > A Sails.js hook that enables API versioning via the HTTP Accept header. It forces clients to specify the version and routes requests for older versions to Sails.js helpers.
 
+**<span style="color: red">Still alpha. Not ready for use yet.</span>**
+
 ## How to use this hook
 
  1. install the hook into your project
@@ -75,5 +77,5 @@ This hook tries to leave as much as possible to pure Sails and only step in when
 
 ## TODO
  1. work out how to handle deleted fields in a given Model. This requires that the model can still store the old field but requests for newer versions don't include it. Perhaps we can add an optional config param that defines which version is the `default`, so you can pin that to a version and write helpers for newer versions.
- 1. handle all the other blueprint routes
- 1. add lots of tests
+ 1. handle the blueprint association routes
+ 1. work out how to handle version POST (Create) requests. Older clients will want to send what they've always sent but that might not be valid for the newer schema. Perhaps we can ask the API developer to write a helper and dynamically add it as a beforeCreate hook for the model. The fallback and be to reject the request.

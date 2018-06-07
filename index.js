@@ -98,7 +98,12 @@ module.exports = function (sails) {
         const msg = `No helper defined '${helperName}'. You need to create and implement that helper!`
         throw new Error(msg)
       }
-      const respBody = await handler()
+      let respBody
+      if (_.isEmpty(req.params)) {
+        respBody = await handler()
+      } else {
+        respBody = await handler.with(req.params)
+      }
       res.set('Content-type', selectedMime)
       return res.ok(respBody)
     }
