@@ -22,7 +22,7 @@
   },
   "scripts": {
     "test": "npm run lint && npm run custom-tests && echo 'Done.'",
-    "test:watch": "mocha -R spec -w",
+    "test:watch": "./node_modules/.bin/nodemon --exec 'npm run custom-tests || exit 1'",
     "lint": "eslint . --max-warnings=0 --report-unused-disable-directives && echo '✔  Your .js files look good.'",
     "lint:fix": "eslint . --fix",
     "custom-tests": "mocha -R spec"
